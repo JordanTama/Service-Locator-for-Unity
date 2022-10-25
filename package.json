@@ -1,0 +1,19 @@
+{
+  "name": "com.jordantama.service-locator",
+  "version": "0.0.1",
+  "displayName": "Service Locator",
+  "description": "This package contains a simple service locator implementation.",
+  "unity": "2021.3",
+  "unityRelease": "8f1",
+  "dependencies": {
+  },
+  "keywords": [
+    "service",
+    "locator"
+  ],
+  "author": {
+    "name": "Jordan Hamlin",
+    "email": "jordan.t.hamlin@gmail.com",
+    "url": "https://jtama.itch.io"
+  }
+}
