@@ -51,6 +51,13 @@ namespace JordanTama.ServiceLocator
             service = (T) Services[key];
         }
 
+        public static T Get<T>() where T : IService
+        {
+            string key = GetServiceKey<T>();
+            T service = Services.ContainsKey(key) ? (T)Services[key] : default;
+            return service;
+        }
+
         public static bool IsRegistered<T>() where T : IService => Services.ContainsKey(GetServiceKey<T>());
 
         private static string GetServiceKey<T>() where T : IService => typeof(T).FullName;
