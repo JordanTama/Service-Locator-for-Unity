@@ -39,16 +39,17 @@ namespace JordanTama.ServiceLocator
             service.OnUnregistered();
         }
 
-        public static void Get<T>(out T service) where T : IService
+        public static bool Get<T>(out T service) where T : IService
         {
             string key = GetServiceKey<T>();
             if (!Services.ContainsKey(key))
             {
                 service = default;
-                return;
+                return false;
             }
 
             service = (T) Services[key];
+            return true;
         }
 
         public static T Get<T>() where T : IService
