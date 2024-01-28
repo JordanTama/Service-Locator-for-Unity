@@ -7,23 +7,24 @@ namespace JordanTama.ServiceLocator
     {
         private static readonly Dictionary<string, IService> Services = new();
 
-        public static void Register<T>(T service) where T : IService
+        public static T Register<T>(T service) where T : IService
         {
             if (typeof(T) == typeof(IService))
             {
                 Debug.LogError("Tried to register service of type IService. Register service as its actual type, rather than an IService.");
-                return;
+                return default;
             }
 
             string key = GetServiceKey<T>();
             if (Services.ContainsKey(key))
             {
                 Debug.LogError($"Service of type {typeof(T).Name} already registered!");
-                return;
+                return default;
             }
 
             Services.Add(key, service);
             service.OnRegistered();
+            return service;
         }
 
         public static void Unregister<T>(T service) where T : IService
