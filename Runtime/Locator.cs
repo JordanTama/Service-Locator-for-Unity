@@ -18,8 +18,8 @@ namespace JordanTama.ServiceLocator
             string key = GetServiceKey<T>();
             if (Services.ContainsKey(key))
             {
-                Debug.LogError($"Service of type {typeof(T).Name} already registered!");
-                return default;
+                Debug.LogWarning($"Service of type {typeof(T).Name} already registered!");
+                return (T)Services[key];
             }
 
             Services.Add(key, service);
