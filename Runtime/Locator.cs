@@ -6,7 +6,10 @@ namespace JordanTama.ServiceLocator
     public static class Locator
     {
         private static readonly Dictionary<string, IService> Services = new();
+        private static readonly Dictionary<string, IConfiguration> Configurations = new();
 
+        #region Registration
+        
         public static T Register<T>(T service) where T : IService
         {
             if (typeof(T) == typeof(IService))
@@ -15,7 +18,7 @@ namespace JordanTama.ServiceLocator
                 return default;
             }
 
-            string key = GetServiceKey<T>();
+            var key = GetServiceKey<T>();
             if (Services.ContainsKey(key))
             {
                 if (Application.isPlaying && !Application.isEditor)
@@ -25,13 +28,20 @@ namespace JordanTama.ServiceLocator
             }
 
             Services.Add(key, service);
+
+            if (service is IConfigurableService configurable)
+            {
+                
+                Configurations.Add(key, configurable.GetConfiguration());
+            }
+            
             service.OnRegistered();
             return service;
         }
 
         public static void Unregister<T>(T service) where T : IService
         {
-            string key = GetServiceKey<T>();
+            var key = GetServiceKey<T>();
             if (!Services.ContainsKey(key))
             {
                 Debug.LogError($"Service of type {typeof(T).Name} not registered!");
@@ -42,9 +52,22 @@ namespace JordanTama.ServiceLocator
             service.OnUnregistered();
         }
 
-        public static bool Get<T>(out T service) where T : IService
+        public static bool IsRegistered<T>() where T : IService => Services.ContainsKey(GetServiceKey<T>());
+        
+        #endregion
+        
+        #region Retrieval
+
+        public static T Get<T>() where T : IService
         {
-            string key = GetServiceKey<T>();
+            var key = GetServiceKey<T>();
+            var service = Services.ContainsKey(key) ? (T)Services[key] : default;
+            return service;
+        }
+        
+        public static bool TryGet<T>(out T service) where T : IService
+        {
+            var key = GetServiceKey<T>();
             if (!Services.ContainsKey(key))
             {
                 service = default;
@@ -55,15 +78,21 @@ namespace JordanTama.ServiceLocator
             return true;
         }
 
-        public static T Get<T>() where T : IService
-        {
-            string key = GetServiceKey<T>();
-            T service = Services.ContainsKey(key) ? (T)Services[key] : default;
-            return service;
-        }
+        #endregion
+        
+        #region Configurable Services
 
-        public static bool IsRegistered<T>() where T : IService => Services.ContainsKey(GetServiceKey<T>());
+        public static IConfiguration GetConfiguration<T>() where T : IConfigurableService
+        {
+            
+        }
+        
+        #endregion
+        
+        #region Utility
 
         private static string GetServiceKey<T>() where T : IService => typeof(T).FullName;
+        
+        #endregion
     }
 }
