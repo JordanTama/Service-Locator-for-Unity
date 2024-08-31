@@ -1,34 +1,21 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace JordanTama.ServiceLocator
 {
     public static class Locator
     {
-        public delegate void ServiceReadyDelegate(IService service);
-        
         private static readonly Dictionary<string, IService> Services = new();
         private static readonly Dictionary<string, IConfiguration> Configurations = new();
 
         #region Registration
         
-        public static T Register<T>(T service, ServiceReadyDelegate onRegistered = null) where T : IService
-        {
-            RegisterAsync(service).ContinueWith(() =>
-            {
-                onRegistered?.Invoke(service);
-            });
-            
-            return service;
-        }
-
-        public static async UniTask RegisterAsync<T>(T service) where T : IService
+        public static T Register<T>(T service) where T : IService
         {
             if (typeof(T) == typeof(IService))
             {
                 Debug.LogError("Tried to register service of type IService. Register service as its actual type, rather than an IService.");
-                return;
+                return default;
             }
 
             var key = GetServiceKey<T>();
@@ -37,25 +24,24 @@ namespace JordanTama.ServiceLocator
                 if (Application.isPlaying && !Application.isEditor)
                     Debug.LogWarning($"Service of type {typeof(T).Name} already registered!");
                 
-                return;
-            }
-
-            if (service is IConfigurableService configurable)
-            {
-                var configuration = await configurable.GetConfiguration();
-                Configurations.Add(key, configuration);
+                return (T)Services[key];
             }
 
             Services.Add(key, service);
+
+            if (service is IConfigurableService configurable)
+            {
+                
+                Configurations.Add(key, configurable.GetConfiguration());
+            }
+            
             service.OnRegistered();
+            return service;
         }
 
         public static void Unregister<T>(T service) where T : IService
         {
             var key = GetServiceKey<T>();
-
-            Configurations.Remove(key);
-            
             if (!Services.ContainsKey(key))
             {
                 Debug.LogError($"Service of type {typeof(T).Name} not registered!");
@@ -79,7 +65,7 @@ namespace JordanTama.ServiceLocator
             return service;
         }
         
-        public static bool Get<T>(out T service) where T : IService
+        public static bool TryGet<T>(out T service) where T : IService
         {
             var key = GetServiceKey<T>();
             if (!Services.ContainsKey(key))
@@ -96,15 +82,9 @@ namespace JordanTama.ServiceLocator
         
         #region Configurable Services
 
-        public static bool TryGetConfiguration<T>(out IConfiguration configuration) where T : IConfigurableService
+        public static IConfiguration GetConfiguration<T>() where T : IConfigurableService
         {
-            var key = GetServiceKey<T>();
-            if (Configurations.TryGetValue(key, out configuration))
-                return true;
             
-            Debug.LogError($"No configuration found for service \"{key}\". It may still be loading...");
-            return false;
-
         }
         
         #endregion
